@@ -3,8 +3,9 @@ const { nanoid } = require('nanoid');
 const InvariantError = require('../../exceptions/InvariantError');
 
 class PlaylistSongsService {
-  constructor() {
+  constructor(playlistsService) {
     this._pool = new Pool();
+    this._playlistsService = playlistsService;
   }
 
   async addPlaylistSong(playlistId, songId) {
@@ -23,17 +24,15 @@ class PlaylistSongsService {
   }
 
   async getPlaylistSongs(playlistId, owner) {
+    await this._playlistsService.verifyPlaylistAccess(playlistId, owner);
+
     const query = {
       text: `SELECT songs.id, songs.title, songs.performer
       FROM songs
       INNER JOIN playlistsongs ON playlistsongs.song_id = songs.id
       INNER JOIN playlists ON playlists.id = playlistsongs.playlist_id
-      LEFT JOIN collaborations ON collaborations.playlist_id = playlists.id
-      WHERE playlists.id = $1
-      AND playlists.owner = $2
-      OR collaborations.user_id = $2
-      GROUP BY songs.id`,
-      values: [playlistId, owner],
+      WHERE playlists.id = $1`,
+      values: [playlistId],
     };
     const result = await this._pool.query(query);
     return result.rows;
