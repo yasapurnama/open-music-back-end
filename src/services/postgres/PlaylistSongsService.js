@@ -27,9 +27,9 @@ class PlaylistSongsService {
   }
 
   async getPlaylistSongs(playlistId, owner) {
-    await this._playlistsService.verifyPlaylistAccess(playlistId, owner);
-
     try {
+      await this._playlistsService.verifyPlaylistAccess(playlistId, owner);
+
       const result = await this._cacheService.get(`playlistSongs:${playlistId}`);
       return JSON.parse(result);
     } catch (error) {
